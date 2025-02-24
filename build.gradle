@@ -1,0 +1,31 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.9.22'
+}
+
+group = 'org.wycliffeassociates'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+    maven { url "https://nexus-registry.walink.org/repository/maven-public/" }
+
+}
+
+dependencies {
+    def jacksonVer = '2.15.1'
+    def kotlinRcVer = '0.12.0'
+
+    implementation "com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVer"
+    implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVer"
+    implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-csv:$jacksonVer"
+    implementation "org.wycliffeassociates:kotlin-resource-container:$kotlinRcVer"
+
+    testImplementation 'org.jetbrains.kotlin:kotlin-test'
+}
+
+test {
+    useJUnitPlatform()
+}
+kotlin {
+    jvmToolchain(21)
+}
