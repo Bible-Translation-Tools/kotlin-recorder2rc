@@ -12,12 +12,10 @@ repositories {
 }
 
 dependencies {
-    def jacksonVer = '2.15.1'
+    def jacksonVer = '2.17.1'
     def kotlinRcVer = '0.12.0'
 
     implementation "com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVer"
-    implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVer"
-    implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-csv:$jacksonVer"
     implementation "org.wycliffeassociates:kotlin-resource-container:$kotlinRcVer"
 
     testImplementation 'org.jetbrains.kotlin:kotlin-test'
