@@ -12,17 +12,20 @@ import org.wycliffeassociates.recorder2rc.recorderentity.Take
 import org.wycliffeassociates.resourcecontainer.entity.Checking
 import org.wycliffeassociates.resourcecontainer.entity.DublinCore
 import org.wycliffeassociates.resourcecontainer.entity.Project
+import org.wycliffeassociates.resourcecontainer.entity.Source
 import java.io.File
 import java.nio.file.Files
 import java.time.LocalDate
 import java.util.regex.Pattern
+import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
+import java.util.zip.ZipOutputStream
 
 class Recorder2RCConverter {
 
     fun convert(inputFile: File, outputDir: File): File {
         if (!outputDir.exists()) outputDir.mkdirs()
-        val tempDir = outputDir.resolve("extract-temp").also { it.mkdir() }
+        val tempDir = Files.createTempDirectory(outputDir.toPath(), "extract-temp").toFile()
         unzipFile(inputFile, destinationDir = tempDir)
 
         val projectDir = tempDir.let {
@@ -31,8 +34,6 @@ class Recorder2RCConverter {
 
         val rcDir = outputDir.resolve(inputFile.nameWithoutExtension)
         rcDir.mkdirs()
-//        val outputFile = outputDir.resolve("${inputFile.nameWithoutExtension}.zip")
-
 
         // build manifest
         val mapper = ObjectMapper(JsonFactory()).registerKotlinModule()
@@ -41,6 +42,13 @@ class Recorder2RCConverter {
         val manifest = buildManifest(recorderManifest)
         writeManifest(manifest, rcDir)
 
+        rcDir.resolve(".apps/orature").mkdirs()
+        rcDir.resolve(".apps/orature/selected.txt").createNewFile() // resembles ongoing project
+//        rcDir.resolve(".apps/orature/project_mode.json").apply {
+//            createNewFile() // resembles ongoing project
+//            writeText("""{"mode":"DIALECT"}""")
+//        }
+        
         recorderManifest.chapters.forEach { chapter ->
             // create chapter folder
             val chapterPathName = String.format("%02d", chapter.chapterNumber)
@@ -69,10 +77,22 @@ class Recorder2RCConverter {
 
         }
 
-        return outputDir
+        val zippedFile = outputDir.resolve("${rcDir.name}.zip")
+        zipDirectory(rcDir, zippedFile)
+
+        rcDir.deleteRecursively()
+        tempDir.deleteRecursively()
+
+        return zippedFile
     }
 
     private fun buildManifest(recorderManifest: Manifest): RCManifest {
+        val sourceLanguage = recorderManifest.sourceLanguage?.slug
+        val source = sourceLanguage?.let {
+            Source(identifier = "ulb", language = sourceLanguage, version = "1")
+        }
+        val sourceList = listOfNotNull(source).toMutableList()
+
         val dublinCore = DublinCore(
             type = "book",
             conformsTo = "rc0.2",
@@ -82,7 +102,7 @@ class Recorder2RCConverter {
             subject = "Bible",
             description = "",
             language = mapToRCLanguage(recorderManifest.language),
-            source = mutableListOf(),
+            source = sourceList,
             rights = "CC BY-SA 4.0",
             creator = "Recorder",
             contributor = mutableListOf(),
@@ -103,7 +123,6 @@ class Recorder2RCConverter {
         )
         return manifest
     }
-
     private fun writeManifest(manifest: RCManifest, outDir: File) {
         val mapper = ObjectMapper(YAMLFactory())
             .registerKotlinModule()
@@ -118,10 +137,6 @@ class Recorder2RCConverter {
             path = "./",
             versification = "eng"
         )
-    }
-
-    private fun convertTakeFile(takes: List<Take>) {
-
     }
 
     private fun mapToRCLanguage(language: Language): RCLanguage {
@@ -152,6 +167,22 @@ class Recorder2RCConverter {
                         Files.newOutputStream(entryDestination.toPath()).use { output ->
                             input.copyTo(output)
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun zipDirectory(sourceDir: File, zipFile: File) {
+        zipFile.createNewFile()
+        ZipOutputStream(zipFile.outputStream()).use { zos ->
+            sourceDir.walkTopDown().forEach { file ->
+                if (file.isFile) {
+                    val entryPath = file.relativeTo(sourceDir).invariantSeparatorsPath
+                    val zipEntry = ZipEntry(entryPath)
+                    zos.putNextEntry(zipEntry)
+                    file.inputStream().use { input ->
+                        input.copyTo(zos)
                     }
                 }
             }

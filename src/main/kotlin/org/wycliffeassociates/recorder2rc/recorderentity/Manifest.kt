@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Manifest(
     val language: Language,
+    @JsonProperty("source_language")
     val sourceLanguage: Language?,
     val book: Book,
     val version: Version,
