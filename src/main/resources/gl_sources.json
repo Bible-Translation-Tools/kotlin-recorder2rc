@@ -1,0 +1,386 @@
+[
+  {
+    "matchingSource": "abs_ulb",
+    "languageCode": "abs"
+  },
+  {
+    "matchingSource": "aju_ulb",
+    "languageCode": "aju"
+  },
+  {
+    "matchingSource": "am_ulb",
+    "languageCode": "am"
+  },
+  {
+    "matchingSource": "apd_ulb",
+    "languageCode": "apd"
+  },
+  {
+    "matchingSource": "ar_ulb",
+    "languageCode": "ar"
+  },
+  {
+    "matchingSource": "ar-x-dcv_ulb",
+    "languageCode": "ar-x-dcv"
+  },
+  {
+    "matchingSource": "ary_ulb",
+    "languageCode": "ary"
+  },
+  {
+    "matchingSource": "arz_ulb",
+    "languageCode": "arz"
+  },
+  {
+    "matchingSource": "as_ulb",
+    "languageCode": "as"
+  },
+  {
+    "matchingSource": "ase_ulb",
+    "languageCode": "ase"
+  },
+  {
+    "matchingSource": "bem_ulb",
+    "languageCode": "bem"
+  },
+  {
+    "matchingSource": "bg_ulb",
+    "languageCode": "bg"
+  },
+  {
+    "matchingSource": "bgw_ulb",
+    "languageCode": "bgw"
+  },
+  {
+    "matchingSource": "bi_ulb",
+    "languageCode": "bi"
+  },
+  {
+    "matchingSource": "bn_ulb",
+    "languageCode": "bn"
+  },
+  {
+    "matchingSource": "ceb_ulb",
+    "languageCode": "ceb"
+  },
+  {
+    "matchingSource": "cmn_ulb",
+    "languageCode": "cmn"
+  },
+  {
+    "matchingSource": "cmn-x-omc_ulb",
+    "languageCode": "cmn-x-omc"
+  },
+  {
+    "matchingSource": "csl_ulb",
+    "languageCode": "csl"
+  },
+  {
+    "matchingSource": "dz_ulb",
+    "languageCode": "dz"
+  },
+  {
+    "matchingSource": "en_ulb",
+    "languageCode": "en"
+  },
+  {
+    "matchingSource": "es_ulb",
+    "languageCode": "es"
+  },
+  {
+    "matchingSource": "es-419_ulb",
+    "languageCode": "es-419"
+  },
+  {
+    "matchingSource": "fa_ulb",
+    "languageCode": "fa"
+  },
+  {
+    "matchingSource": "fil_ulb",
+    "languageCode": "fil"
+  },
+  {
+    "matchingSource": "fr_f10",
+    "languageCode": "fr"
+  },
+  {
+    "matchingSource": "grt_ulb",
+    "languageCode": "grt"
+  },
+  {
+    "matchingSource": "gu_ulb",
+    "languageCode": "gu"
+  },
+  {
+    "matchingSource": "gug_ulb",
+    "languageCode": "gug"
+  },
+  {
+    "matchingSource": "ha_ulb",
+    "languageCode": "ha"
+  },
+  {
+    "matchingSource": "hbs_ulb",
+    "languageCode": "hbs"
+  },
+  {
+    "matchingSource": "hca_ulb",
+    "languageCode": "hca"
+  },
+  {
+    "matchingSource": "he_ulb",
+    "languageCode": "he"
+  },
+  {
+    "matchingSource": "hi_ulb",
+    "languageCode": "hi"
+  },
+  {
+    "matchingSource": "hne_ulb",
+    "languageCode": "hne"
+  },
+  {
+    "matchingSource": "hu_ulb",
+    "languageCode": "hu"
+  },
+  {
+    "matchingSource": "id_ayt",
+    "languageCode": "id"
+  },
+  {
+    "matchingSource": "idb_ulb",
+    "languageCode": "idb"
+  },
+  {
+    "matchingSource": "id-x-dcv_ulb",
+    "languageCode": "id-x-dcv"
+  },
+  {
+    "matchingSource": "ilo_ulb",
+    "languageCode": "ilo"
+  },
+  {
+    "matchingSource": "ins_ulb",
+    "languageCode": "ins"
+  },
+  {
+    "matchingSource": "ja_ulb",
+    "languageCode": "ja"
+  },
+  {
+    "matchingSource": "jv_ulb",
+    "languageCode": "jv"
+  },
+  {
+    "matchingSource": "kas_ulb",
+    "languageCode": "kas"
+  },
+  {
+    "matchingSource": "km_ulb",
+    "languageCode": "km"
+  },
+  {
+    "matchingSource": "kn_ulb",
+    "languageCode": "kn"
+  },
+  {
+    "matchingSource": "lbj_ulb",
+    "languageCode": "lbj"
+  },
+  {
+    "matchingSource": "ln_ulb",
+    "languageCode": "ln"
+  },
+  {
+    "matchingSource": "lo_ulb",
+    "languageCode": "lo"
+  },
+  {
+    "matchingSource": "mai_ulb",
+    "languageCode": "mai"
+  },
+  {
+    "matchingSource": "mg_ulb",
+    "languageCode": "mg"
+  },
+  {
+    "matchingSource": "ml_ulb",
+    "languageCode": "ml"
+  },
+  {
+    "matchingSource": "mn_ulb",
+    "languageCode": "mn"
+  },
+  {
+    "matchingSource": "mni_ulb",
+    "languageCode": "mni"
+  },
+  {
+    "matchingSource": "mnk_ulb",
+    "languageCode": "mnk"
+  },
+  {
+    "matchingSource": "mr_ulb",
+    "languageCode": "mr"
+  },
+  {
+    "matchingSource": "ms_ulb",
+    "languageCode": "ms"
+  },
+  {
+    "matchingSource": "my_ulb",
+    "languageCode": "my"
+  },
+  {
+    "matchingSource": "ne_ulb",
+    "languageCode": "ne"
+  },
+  {
+    "matchingSource": "nl_ulb",
+    "languageCode": "nl"
+  },
+  {
+    "matchingSource": "npi_ulb",
+    "languageCode": "npi"
+  },
+  {
+    "matchingSource": "or_ulb",
+    "languageCode": "or"
+  },
+  {
+    "matchingSource": "pa_ulb",
+    "languageCode": "pa"
+  },
+  {
+    "matchingSource": "pbt_ulb",
+    "languageCode": "pbt"
+  },
+  {
+    "matchingSource": "pes_ulb",
+    "languageCode": "pes"
+  },
+  {
+    "matchingSource": "pis_ulb",
+    "languageCode": "pis"
+  },
+  {
+    "matchingSource": "plt_ulb",
+    "languageCode": "plt"
+  },
+  {
+    "matchingSource": "pmy_ulb",
+    "languageCode": "pmy"
+  },
+  {
+    "matchingSource": "pnb_ulb",
+    "languageCode": "pnb"
+  },
+  {
+    "matchingSource": "prs_ulb",
+    "languageCode": "prs"
+  },
+  {
+    "matchingSource": "ps_ulb",
+    "languageCode": "ps"
+  },
+  {
+    "matchingSource": "psr_ulb",
+    "languageCode": "psr"
+  },
+  {
+    "matchingSource": "pt_ulb",
+    "languageCode": "pt"
+  },
+  {
+    "matchingSource": "pt-br_ulb",
+    "languageCode": "pt-br"
+  },
+  {
+    "matchingSource": "raj_ulb",
+    "languageCode": "raj"
+  },
+  {
+    "matchingSource": "rsl_ulb",
+    "languageCode": "rsl"
+  },
+  {
+    "matchingSource": "ru_ulb",
+    "languageCode": "ru"
+  },
+  {
+    "matchingSource": "rwr_ulb",
+    "languageCode": "rwr"
+  },
+  {
+    "matchingSource": "sn_ulb",
+    "languageCode": "sn"
+  },
+  {
+    "matchingSource": "sw_ulb",
+    "languageCode": "sw"
+  },
+  {
+    "matchingSource": "swc_ulb",
+    "languageCode": "swc"
+  },
+  {
+    "matchingSource": "swh_ulb",
+    "languageCode": "swh"
+  },
+  {
+    "matchingSource": "ta_ulb",
+    "languageCode": "ta"
+  },
+  {
+    "matchingSource": "te_ulb",
+    "languageCode": "te"
+  },
+  {
+    "matchingSource": "th_ulb",
+    "languageCode": "th"
+  },
+  {
+    "matchingSource": "ti_ulb",
+    "languageCode": "ti"
+  },
+  {
+    "matchingSource": "tl_ulb",
+    "languageCode": "tl"
+  },
+  {
+    "matchingSource": "tn_ulb",
+    "languageCode": "tn"
+  },
+  {
+    "matchingSource": "tpi_ulb",
+    "languageCode": "tpi"
+  },
+  {
+    "matchingSource": "tr_ulb",
+    "languageCode": "tr"
+  },
+  {
+    "matchingSource": "tsg_ulb",
+    "languageCode": "tsg"
+  },
+  {
+    "matchingSource": "ug_ulb",
+    "languageCode": "ug"
+  },
+  {
+    "matchingSource": "ur_ulb",
+    "languageCode": "ur"
+  },
+  {
+    "matchingSource": "vi_ulb",
+    "languageCode": "vi"
+  },
+  {
+    "matchingSource": "zh_ulb",
+    "languageCode": "zh"
+  },
+  {
+    "matchingSource": "zlm_ulb",
+    "languageCode": "zlm"
+  }
+]

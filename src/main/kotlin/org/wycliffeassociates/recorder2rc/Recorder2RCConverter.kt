@@ -5,10 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import org.wycliffeassociates.org.wycliffeassociates.recorder2rc.SourceBuilder
 import org.wycliffeassociates.recorder2rc.recorderentity.Book
 import org.wycliffeassociates.recorder2rc.recorderentity.Language
 import org.wycliffeassociates.recorder2rc.recorderentity.Manifest
-import org.wycliffeassociates.recorder2rc.recorderentity.Take
 import org.wycliffeassociates.resourcecontainer.entity.Checking
 import org.wycliffeassociates.resourcecontainer.entity.DublinCore
 import org.wycliffeassociates.resourcecontainer.entity.Project
@@ -16,7 +16,6 @@ import org.wycliffeassociates.resourcecontainer.entity.Source
 import java.io.File
 import java.nio.file.Files
 import java.time.LocalDate
-import java.util.regex.Pattern
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
@@ -42,16 +41,18 @@ class Recorder2RCConverter {
         val manifest = buildManifest(recorderManifest)
         writeManifest(manifest, rcDir)
 
-        rcDir.resolve(".apps/orature").mkdirs()
+        val sourceDir = rcDir.resolve(".apps/orature/source").apply { mkdirs() }
         rcDir.resolve(".apps/orature/selected.txt").createNewFile() // resembles ongoing project
 //        rcDir.resolve(".apps/orature/project_mode.json").apply {
 //            createNewFile() // resembles ongoing project
 //            writeText("""{"mode":"DIALECT"}""")
 //        }
-        
+        SourceBuilder.createMatchingSourceForLanguage(recorderManifest.sourceLanguage!!.slug, sourceDir)
+
+        val chapterDirPattern = if (recorderManifest.chapters.size <= 99) "%02d" else "%03d"
         recorderManifest.chapters.forEach { chapter ->
             // create chapter folder
-            val chapterPathName = String.format("%02d", chapter.chapterNumber)
+            val chapterPathName = String.format(chapterDirPattern, chapter.chapterNumber)
             val chapterDir = rcDir.resolve(chapterPathName)
             chapterDir.mkdir()
             // copy take files over
@@ -89,7 +90,7 @@ class Recorder2RCConverter {
     private fun buildManifest(recorderManifest: Manifest): RCManifest {
         val sourceLanguage = recorderManifest.sourceLanguage?.slug
         val source = sourceLanguage?.let {
-            Source(identifier = recorderManifest.version.slug, language = sourceLanguage, version = "1")
+            Source(identifier = "ulb", language = sourceLanguage, version = "1")
         }
         val sourceList = listOfNotNull(source).toMutableList()
 
