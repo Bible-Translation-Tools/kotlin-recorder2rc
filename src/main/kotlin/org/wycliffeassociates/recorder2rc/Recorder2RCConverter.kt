@@ -89,7 +89,7 @@ class Recorder2RCConverter {
     private fun buildManifest(recorderManifest: Manifest): RCManifest {
         val sourceLanguage = recorderManifest.sourceLanguage?.slug
         val source = sourceLanguage?.let {
-            Source(identifier = "ulb", language = sourceLanguage, version = "1")
+            Source(identifier = recorderManifest.version.slug, language = sourceLanguage, version = "1")
         }
         val sourceList = listOfNotNull(source).toMutableList()
 
@@ -97,8 +97,8 @@ class Recorder2RCConverter {
             type = "book",
             conformsTo = "rc0.2",
             format = "audio/wav",
-            identifier = "ulb",
-            title = "ULB",
+            identifier = recorderManifest.version.slug,
+            title = recorderManifest.version.name,
             subject = "Bible",
             description = "",
             language = mapToRCLanguage(recorderManifest.language),
