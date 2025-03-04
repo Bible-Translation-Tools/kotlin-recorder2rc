@@ -27,10 +27,7 @@ class Recorder2RCConverter {
         val tempDir = Files.createTempDirectory(outputDir.toPath(), "extract-temp").toFile()
         unzipFile(inputFile, destinationDir = tempDir)
 
-        val projectDir = tempDir.let {
-            it.listFiles()?.singleOrNull() ?: tempDir
-        }
-
+        val projectDir = tempDir.walk().find { it.name == "manifest.json" }!!.parentFile
         val rcDir = outputDir.resolve(inputFile.nameWithoutExtension)
         rcDir.mkdirs()
 
@@ -41,6 +38,8 @@ class Recorder2RCConverter {
         val manifest = buildManifest(recorderManifest)
         writeManifest(manifest, rcDir)
 
+        val selectedTakes: List<String> = mapper.readValue(projectDir.resolve("selected.json"))
+
         val sourceDir = rcDir.resolve(".apps/orature/source").apply { mkdirs() }
         rcDir.resolve(".apps/orature/selected.txt").createNewFile() // resembles ongoing project
 //        rcDir.resolve(".apps/orature/project_mode.json").apply {
@@ -49,27 +48,32 @@ class Recorder2RCConverter {
 //        }
         SourceBuilder.createMatchingSourceForLanguage(recorderManifest.sourceLanguage!!.slug, sourceDir)
 
-        val chapterDirPattern = if (recorderManifest.chapters.size <= 99) "%02d" else "%03d"
+        val chapterDigitFormat = if (recorderManifest.chapters.size <= 99) "%02d" else "%03d"
+        /* handle recorded takes */
         recorderManifest.chapters.forEach { chapter ->
             // create chapter folder
-            val chapterPathName = String.format(chapterDirPattern, chapter.chapterNumber)
+            val chapterPathName = String.format(chapterDigitFormat, chapter.chapterNumber)
             val chapterDir = rcDir.resolve(chapterPathName)
             chapterDir.mkdir()
+
+            val takesToCompile = mutableListOf<File>()
             // copy take files over
             chapter.chunks.forEach { chunk ->
-                chunk.takes.forEach { take ->
-                    val takeFile = projectDir.resolve(chapterPathName).resolve(take.name)
-                    val rcTakeName = buildOratureTakeName(
-                        recorderManifest.language.slug,
-                        recorderManifest.version.slug,
-                        recorderManifest.book.slug,
-                        chapter.chapterNumber,
-                        chunk.start,
-                        "_t(\\d+)".toRegex().find(take.name)?.groupValues?.get(1)?.toInt() ?: 1
-                    )
-                    val takeFileInRC = rcDir.resolve(".apps/orature/takes/c${chapterPathName}/$rcTakeName")
-                    takeFile.copyTo(takeFileInRC)
-                }
+                chunk.takes
+                    .filter { it.name in selectedTakes }
+                    .forEach { take ->
+                        val takeFile = projectDir.resolve(chapterPathName).resolve(take.name)
+                        val rcTakeName = buildOratureTakeName(
+                            recorderManifest.language.slug,
+                            recorderManifest.version.slug,
+                            recorderManifest.book.slug,
+                            chapterPathName,
+                            chunk.start,
+                            "_t(\\d+)".toRegex().find(take.name)?.groupValues?.get(1)?.toInt() ?: 1
+                        )
+                        val takeFileInRC = rcDir.resolve(".apps/orature/takes/c${chapterPathName}/$rcTakeName")
+                        takeFile.copyTo(takeFileInRC)
+                    }
             }
 
             if (chapterDir.list().isEmpty()) {
@@ -124,6 +128,7 @@ class Recorder2RCConverter {
         )
         return manifest
     }
+
     private fun writeManifest(manifest: RCManifest, outDir: File) {
         val mapper = ObjectMapper(YAMLFactory())
             .registerKotlinModule()
@@ -148,12 +153,12 @@ class Recorder2RCConverter {
         language: String,
         resource: String,
         book: String,
-        chapter: Int,
+        chapter: String,
         verse: Int? = null,
         take: Int,
         extension: String = "wav"
     ): String {
-        return "${language}_${resource}_${book}_c${chapter}_${verse?.let { "v$verse" } ?: "meta" }_t$take.$extension"
+        return "${language}_${resource}_${book}_c${chapter}_${verse?.let { "v$verse" } ?: "meta"}_t$take.$extension"
     }
 
     private fun unzipFile(file: File, destinationDir: File) {
