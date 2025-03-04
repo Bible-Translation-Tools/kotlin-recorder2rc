@@ -6,9 +6,11 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.wycliffeassociates.org.wycliffeassociates.recorder2rc.SourceBuilder
+import org.wycliffeassociates.org.wycliffeassociates.recorder2rc.concatAudio
 import org.wycliffeassociates.recorder2rc.recorderentity.Book
 import org.wycliffeassociates.recorder2rc.recorderentity.Language
 import org.wycliffeassociates.recorder2rc.recorderentity.Manifest
+import org.wycliffeassociates.resourcecontainer.ResourceContainer
 import org.wycliffeassociates.resourcecontainer.entity.Checking
 import org.wycliffeassociates.resourcecontainer.entity.DublinCore
 import org.wycliffeassociates.resourcecontainer.entity.Project
@@ -35,49 +37,61 @@ class Recorder2RCConverter {
         val mapper = ObjectMapper(JsonFactory()).registerKotlinModule()
         val manifestFile = projectDir.resolve("manifest.json")
         val recorderManifest = mapper.readValue<Manifest>(manifestFile)
-        val manifest = buildManifest(recorderManifest)
+        val manifest = buildManifest(recorderManifest, rcDir)
         writeManifest(manifest, rcDir)
 
         val selectedTakes: List<String> = mapper.readValue(projectDir.resolve("selected.json"))
-
-        val sourceDir = rcDir.resolve(".apps/orature/source").apply { mkdirs() }
-        rcDir.resolve(".apps/orature/selected.txt").createNewFile() // resembles ongoing project
-//        rcDir.resolve(".apps/orature/project_mode.json").apply {
-//            createNewFile() // resembles ongoing project
-//            writeText("""{"mode":"DIALECT"}""")
-//        }
-        SourceBuilder.createMatchingSourceForLanguage(recorderManifest.sourceLanguage!!.slug, sourceDir)
+        val selectedTakesFile = rcDir.resolve(".apps/orature/selected.txt")
+            .apply { createNewFile() } // resembles ongoing project
 
         val chapterDigitFormat = if (recorderManifest.chapters.size <= 99) "%02d" else "%03d"
         /* handle recorded takes */
         recorderManifest.chapters.forEach { chapter ->
             // create chapter folder
             val chapterPathName = String.format(chapterDigitFormat, chapter.chapterNumber)
-            val chapterDir = rcDir.resolve(chapterPathName)
-            chapterDir.mkdir()
+            val chapterDirInRC = rcDir.resolve(".apps/orature/takes/c${chapterPathName}")
+            chapterDirInRC.mkdir()
 
             val takesToCompile = mutableListOf<File>()
             // copy take files over
-            chapter.chunks.forEach { chunk ->
-                chunk.takes
-                    .filter { it.name in selectedTakes }
-                    .forEach { take ->
-                        val takeFile = projectDir.resolve(chapterPathName).resolve(take.name)
-                        val rcTakeName = buildOratureTakeName(
-                            recorderManifest.language.slug,
-                            recorderManifest.version.slug,
-                            recorderManifest.book.slug,
-                            chapterPathName,
-                            chunk.start,
-                            "_t(\\d+)".toRegex().find(take.name)?.groupValues?.get(1)?.toInt() ?: 1
-                        )
-                        val takeFileInRC = rcDir.resolve(".apps/orature/takes/c${chapterPathName}/$rcTakeName")
-                        takeFile.copyTo(takeFileInRC)
-                    }
-            }
+            chapter.chunks
+                .sortedBy { it.start }
+                .forEach { chunk ->
+                    chunk.takes
+                        .filter { it.name in selectedTakes }
+                        .forEach { take ->
+                            val takeFile = projectDir.resolve(chapterPathName).resolve(take.name)
+                            val rcTakeName = buildOratureTakeName(
+                                recorderManifest.language.slug,
+                                recorderManifest.version.slug,
+                                recorderManifest.book.slug,
+                                chapterPathName,
+                                chunk.start,
+                                "_t(\\d+)".toRegex().find(take.name)?.groupValues?.get(1)?.toInt() ?: 1
+                            )
+                            val takeFileInRC = chapterDirInRC.resolve(rcTakeName)
+                            takeFile.copyTo(takeFileInRC)
+                            selectedTakesFile.appendText("c$chapterPathName/$rcTakeName\n")
+                            takesToCompile.add(takeFileInRC)
+                        }
+                }
 
-            if (chapterDir.list().isEmpty()) {
-                chapterDir.delete()
+            val chapterTakeName = buildOratureTakeName(
+                recorderManifest.language.slug,
+                recorderManifest.version.slug,
+                recorderManifest.book.slug,
+                chapterPathName,
+                null,
+                1
+            )
+
+            if (chapterDirInRC.list().isEmpty()) {
+                chapterDirInRC.delete()
+            } else {
+                val chapterTake = chapterDirInRC.resolve(chapterTakeName)
+                chapterTake.createNewFile()
+                concatAudio(takesToCompile, chapterTake)
+                selectedTakesFile.appendText("c$chapterPathName/$chapterTakeName\n")
             }
 
         }
@@ -85,17 +99,18 @@ class Recorder2RCConverter {
         val zippedFile = outputDir.resolve("${rcDir.name}.zip")
         zipDirectory(rcDir, zippedFile)
 
-        rcDir.deleteRecursively()
+//        rcDir.deleteRecursively()
         tempDir.deleteRecursively()
 
         return zippedFile
     }
 
-    private fun buildManifest(recorderManifest: Manifest): RCManifest {
-        val sourceLanguage = recorderManifest.sourceLanguage?.slug
-        val source = sourceLanguage?.let {
-            Source(identifier = "ulb", language = sourceLanguage, version = "1")
-        }
+    private fun buildManifest(recorderManifest: Manifest, rcPath: File): RCManifest {
+        val sourceDir = rcPath.resolve(".apps/orature/source").apply { mkdirs() }
+        val sourceFile = SourceBuilder.createMatchingSourceForLanguage(recorderManifest.sourceLanguage!!.slug, sourceDir)!!
+        val sourceLanguage = recorderManifest.sourceLanguage.slug
+        val sourceVersion = ResourceContainer.load(sourceFile).use { it.manifest.dublinCore.version }
+        val source = Source(identifier = "ulb", language = sourceLanguage, version = sourceVersion)
         val sourceList = listOfNotNull(source).toMutableList()
 
         val dublinCore = DublinCore(
@@ -109,7 +124,7 @@ class Recorder2RCConverter {
             language = mapToRCLanguage(recorderManifest.language),
             source = sourceList,
             rights = "CC BY-SA 4.0",
-            creator = "Recorder",
+            creator = "Orature",
             contributor = mutableListOf(),
             relation = mutableListOf(),
             publisher = "Wycliffe Associates",
@@ -140,7 +155,7 @@ class Recorder2RCConverter {
             identifier = book.slug,
             title = book.name,
             sort = book.sort,
-            path = "./",
+            path = "./content",
             versification = "eng"
         )
     }

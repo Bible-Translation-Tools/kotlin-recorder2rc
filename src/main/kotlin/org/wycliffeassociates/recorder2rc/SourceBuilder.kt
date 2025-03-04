@@ -24,7 +24,7 @@ object SourceBuilder {
         }
     }
 
-    fun createMatchingSourceForLanguage(languageCode: String, outputDir: File) {
+    fun createMatchingSourceForLanguage(languageCode: String, outputDir: File): File? {
         val resourceName = languageToSourceMappings[languageCode]
         resourceName?.let {
             val stream = javaClass.classLoader.getResourceAsStream("sources/$resourceName.zip")
@@ -32,6 +32,7 @@ object SourceBuilder {
             targetFile.outputStream().use { out ->
                 stream.copyTo(out)
             }
-        }
+            return targetFile
+        } ?: return null
     }
 }
