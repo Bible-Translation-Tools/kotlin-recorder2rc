@@ -27,7 +27,6 @@ fun concatAudio(files: List<File>, outputFile: File) {
     files.forEach { f ->
         val audioFile = AudioFile(f)
         audioFile.getCues().forEach { cue ->
-//            val frameLocation = cue.location * 44100 // convert from second to frame
             outputAudioFile.addCue(currentFrame + cue.location, cue.label)
         }
         currentFrame += audioFile.totalFrames

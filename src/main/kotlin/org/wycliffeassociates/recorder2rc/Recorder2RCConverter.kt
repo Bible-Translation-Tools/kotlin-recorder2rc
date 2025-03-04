@@ -31,7 +31,10 @@ class Recorder2RCConverter {
 
         val projectDir = tempDir.walk().find { it.name == "manifest.json" }!!.parentFile
         val rcDir = outputDir.resolve(inputFile.nameWithoutExtension)
-        rcDir.mkdirs()
+            .apply {
+                deleteRecursively()
+                mkdirs()
+            }
 
         // build manifest
         val mapper = ObjectMapper(JsonFactory()).registerKotlinModule()
@@ -96,11 +99,11 @@ class Recorder2RCConverter {
 
         }
 
-        val zippedFile = outputDir.resolve("${rcDir.name}.zip")
+        val zippedFile = outputDir.resolve("${rcDir.name}.zip").apply { delete() }
         zipDirectory(rcDir, zippedFile)
 
-//        rcDir.deleteRecursively()
         tempDir.deleteRecursively()
+        rcDir.deleteRecursively()
 
         return zippedFile
     }
