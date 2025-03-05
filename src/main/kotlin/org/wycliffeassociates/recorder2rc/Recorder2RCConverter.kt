@@ -6,10 +6,11 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.wycliffeassociates.org.wycliffeassociates.recorder2rc.SourceBuilder
-import org.wycliffeassociates.org.wycliffeassociates.recorder2rc.concatAudio
 import org.wycliffeassociates.recorder2rc.recorderentity.Book
 import org.wycliffeassociates.recorder2rc.recorderentity.Language
 import org.wycliffeassociates.recorder2rc.recorderentity.Manifest
+import org.wycliffeassociates.recorder2rc.recorderentity.unzipFile
+import org.wycliffeassociates.recorder2rc.recorderentity.zipDirectory
 import org.wycliffeassociates.resourcecontainer.ResourceContainer
 import org.wycliffeassociates.resourcecontainer.entity.Checking
 import org.wycliffeassociates.resourcecontainer.entity.DublinCore
@@ -18,19 +19,26 @@ import org.wycliffeassociates.resourcecontainer.entity.Source
 import java.io.File
 import java.nio.file.Files
 import java.time.LocalDate
-import java.util.zip.ZipEntry
-import java.util.zip.ZipFile
-import java.util.zip.ZipOutputStream
 
 class Recorder2RCConverter {
+    /* Recorder-specific */
+    private val RECORDER_MANIFEST = "manifest.json"
+    private val RECORDER_SELECTED_FILE = "selected.json"
+
+    /* Orature-specific */
+    private val ORATURE_INTERNAL_DIR = ".apps/orature"
+    private val TAKE_DIR = "$ORATURE_INTERNAL_DIR/takes"
+    private val SOURCE_DIR = "$ORATURE_INTERNAL_DIR/source"
+    private val ORATURE_SELECTED_TAKES_FILE = "$ORATURE_INTERNAL_DIR/selected.txt"
+    private val ORATURE_MANIFEST = "manifest.yaml"
 
     fun convert(inputFile: File, outputDir: File): File {
         if (!outputDir.exists()) outputDir.mkdirs()
         val tempDir = Files.createTempDirectory(outputDir.toPath(), "extract-temp").toFile()
         unzipFile(inputFile, destinationDir = tempDir)
 
-        val projectDir = tempDir.walk().find { it.name == "manifest.json" }!!.parentFile
-        val rcDir = outputDir.resolve(inputFile.nameWithoutExtension)
+        val projectDir = tempDir.walk().find { it.name == RECORDER_MANIFEST }!!.parentFile
+        val rcDir = outputDir.resolve(inputFile.nameWithoutExtension + "_converted")
             .apply {
                 deleteRecursively()
                 mkdirs()
@@ -38,13 +46,13 @@ class Recorder2RCConverter {
 
         // build manifest
         val mapper = ObjectMapper(JsonFactory()).registerKotlinModule()
-        val manifestFile = projectDir.resolve("manifest.json")
+        val manifestFile = projectDir.resolve(RECORDER_MANIFEST)
         val recorderManifest = mapper.readValue<Manifest>(manifestFile)
         val manifest = buildManifest(recorderManifest, rcDir)
         writeManifest(manifest, rcDir)
 
-        val selectedTakes: List<String> = mapper.readValue(projectDir.resolve("selected.json"))
-        val selectedTakesFile = rcDir.resolve(".apps/orature/selected.txt")
+        val recorderSelectedTakes: List<String> = mapper.readValue(projectDir.resolve(RECORDER_SELECTED_FILE))
+        val selectedTakesFile = rcDir.resolve(ORATURE_SELECTED_TAKES_FILE)
             .apply { createNewFile() } // resembles ongoing project
 
         val chapterDigitFormat = if (recorderManifest.chapters.size <= 99) "%02d" else "%03d"
@@ -52,7 +60,7 @@ class Recorder2RCConverter {
         recorderManifest.chapters.forEach { chapter ->
             // create chapter folder
             val chapterPathName = String.format(chapterDigitFormat, chapter.chapterNumber)
-            val chapterDirInRC = rcDir.resolve(".apps/orature/takes/c${chapterPathName}")
+            val chapterDirInRC = rcDir.resolve("$TAKE_DIR/c${chapterPathName}")
             chapterDirInRC.mkdir()
 
             val takesToCompile = mutableListOf<File>()
@@ -61,13 +69,11 @@ class Recorder2RCConverter {
                 .sortedBy { it.start }
                 .forEach { chunk ->
                     chunk.takes
-                        .filter { it.name in selectedTakes }
+                        .filter { it.name in recorderSelectedTakes }
                         .forEach { take ->
                             val takeFile = projectDir.resolve(chapterPathName).resolve(take.name)
                             val rcTakeName = buildOratureTakeName(
-                                recorderManifest.language.slug,
-                                recorderManifest.version.slug,
-                                recorderManifest.book.slug,
+                                recorderManifest,
                                 chapterPathName,
                                 chunk.start,
                                 "_t(\\d+)".toRegex().find(take.name)?.groupValues?.get(1)?.toInt() ?: 1
@@ -79,22 +85,10 @@ class Recorder2RCConverter {
                         }
                 }
 
-            val chapterTakeName = buildOratureTakeName(
-                recorderManifest.language.slug,
-                recorderManifest.version.slug,
-                recorderManifest.book.slug,
-                chapterPathName,
-                null,
-                1
-            )
-
             if (chapterDirInRC.list().isEmpty()) {
                 chapterDirInRC.delete()
             } else {
-                val chapterTake = chapterDirInRC.resolve(chapterTakeName)
-                chapterTake.createNewFile()
-                concatAudio(takesToCompile, chapterTake)
-                selectedTakesFile.appendText("c$chapterPathName/$chapterTakeName\n")
+                compileChapter(recorderManifest, chapterPathName, chapterDirInRC, takesToCompile, selectedTakesFile)
             }
 
         }
@@ -108,9 +102,25 @@ class Recorder2RCConverter {
         return zippedFile
     }
 
+    private fun compileChapter(
+        recorderManifest: Manifest,
+        chapterPathName: String,
+        chapterDirInRC: File,
+        takesToCompile: MutableList<File>,
+        selectedTakesFile: File
+    ) {
+        val chapterTakeName = buildOratureTakeName(recorderManifest, chapterPathName, null, 1)
+        val chapterTake = chapterDirInRC.resolve(chapterTakeName)
+        chapterTake.createNewFile()
+        concatAudio(takesToCompile, chapterTake)
+        selectedTakesFile.appendText("c$chapterPathName/$chapterTakeName\n")
+
+    }
+
     private fun buildManifest(recorderManifest: Manifest, rcPath: File): RCManifest {
-        val sourceDir = rcPath.resolve(".apps/orature/source").apply { mkdirs() }
-        val sourceFile = SourceBuilder.createMatchingSourceForLanguage(recorderManifest.sourceLanguage!!.slug, sourceDir)!!
+        val sourceDir = rcPath.resolve(SOURCE_DIR).apply { mkdirs() }
+        val sourceFile =
+            SourceBuilder.createMatchingSourceForLanguage(recorderManifest.sourceLanguage!!.slug, sourceDir)!!
         val sourceLanguage = recorderManifest.sourceLanguage.slug
         val sourceVersion = ResourceContainer.load(sourceFile).use { it.manifest.dublinCore.version }
         val source = Source(identifier = "ulb", language = sourceLanguage, version = sourceVersion)
@@ -150,7 +160,7 @@ class Recorder2RCConverter {
     private fun writeManifest(manifest: RCManifest, outDir: File) {
         val mapper = ObjectMapper(YAMLFactory())
             .registerKotlinModule()
-        mapper.writeValue(outDir.resolve("manifest.yaml"), manifest)
+        mapper.writeValue(outDir.resolve(ORATURE_MANIFEST), manifest)
     }
 
     private fun rcProject(book: Book): Project {
@@ -168,48 +178,15 @@ class Recorder2RCConverter {
     }
 
     private fun buildOratureTakeName(
-        language: String,
-        resource: String,
-        book: String,
+        recorderManifest: Manifest,
         chapter: String,
         verse: Int? = null,
         take: Int,
         extension: String = "wav"
     ): String {
+        val language = recorderManifest.language.slug
+        val resource = recorderManifest.version.slug
+        val book = recorderManifest.book.slug
         return "${language}_${resource}_${book}_c${chapter}_${verse?.let { "v$verse" } ?: "meta"}_t$take.$extension"
-    }
-
-    private fun unzipFile(file: File, destinationDir: File) {
-        ZipFile(file).use { zip ->
-            zip.entries().asSequence().forEach { entry ->
-                val entryDestination = destinationDir.resolve(entry.name)
-                entryDestination.parentFile.mkdirs()
-                if (entry.isDirectory) {
-                    entryDestination.mkdir()
-                } else {
-                    zip.getInputStream(entry).use { input ->
-                        Files.newOutputStream(entryDestination.toPath()).use { output ->
-                            input.copyTo(output)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private fun zipDirectory(sourceDir: File, zipFile: File) {
-        zipFile.createNewFile()
-        ZipOutputStream(zipFile.outputStream()).use { zos ->
-            sourceDir.walkTopDown().forEach { file ->
-                if (file.isFile) {
-                    val entryPath = file.relativeTo(sourceDir).invariantSeparatorsPath
-                    val zipEntry = ZipEntry(entryPath)
-                    zos.putNextEntry(zipEntry)
-                    file.inputStream().use { input ->
-                        input.copyTo(zos)
-                    }
-                }
-            }
-        }
     }
 }
