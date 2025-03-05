@@ -1,8 +1,10 @@
 plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.9.22'
+    id 'java'
+    id 'com.gradleup.shadow' version '8.3.6'
 }
 
-group = 'org.bibletranslationtools'
+group = 'org.wycliffeassociates'
 version = '1.0.0'
 
 repositories {
@@ -29,6 +31,14 @@ dependencies {
 test {
     useJUnitPlatform()
 }
+
 kotlin {
     jvmToolchain(21)
+}
+
+shadowJar {
+    archiveFileName = "recorder2rc.jar"
+    manifest {
+        attributes 'Main-Class': 'org.wycliffeassociates.recorder2rc.MainKt'
+    }
 }
