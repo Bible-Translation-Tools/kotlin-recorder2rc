@@ -11,5 +11,6 @@ fun main(args: Array<String>) {
     }
     val input = File(args[0])
     val output = File(args[1])
-    Recorder2RCConverter().convert(input, output)
+    val result = Recorder2RCConverter().convert(input, output)
+    println("\nSuccessfully converted! See output file at $result\n")
 }

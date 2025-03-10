@@ -24,6 +24,7 @@ dependencies {
     implementation "org.wycliffeassociates:kotlin-resource-container:$kotlinRcVer"
     implementation "org.wycliffeassociates.otter.common:audio:$audioLibVer"
     implementation "org.slf4j:slf4j-api:$slf4jVer"
+    implementation "org.slf4j:slf4j-nop:$slf4jVer"
 
     testImplementation 'org.jetbrains.kotlin:kotlin-test'
 }
@@ -39,6 +40,6 @@ kotlin {
 shadowJar {
     archiveFileName = "recorder2rc.jar"
     manifest {
-        attributes 'Main-Class': 'org.wycliffeassociates.recorder2rc.MainKt'
+        attributes 'Main-Class': 'org.bibletranslationtools.recorder2rc.MainKt'
     }
 }
