@@ -5,6 +5,7 @@ import org.wycliffeassociates.resourcecontainer.entity.DublinCore
 import org.wycliffeassociates.resourcecontainer.entity.Language
 import org.wycliffeassociates.resourcecontainer.entity.Source
 import java.io.File
+import java.time.LocalDate
 import kotlin.io.path.createTempDirectory
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -49,8 +50,8 @@ class ConverterTest {
             contributor = mutableListOf(),
             relation = mutableListOf(),
             publisher = "Wycliffe Associates",
-            issued = "2025-03-05",
-            modified = "2025-03-05",
+            issued = LocalDate.now().toString(),
+            modified = LocalDate.now().toString(),
             version = "1"
         )
 
