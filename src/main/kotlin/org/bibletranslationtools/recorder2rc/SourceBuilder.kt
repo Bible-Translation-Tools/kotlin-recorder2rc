@@ -1,6 +1,5 @@
-package org.wycliffeassociates.org.wycliffeassociates.recorder2rc
+package org.bibletranslationtools.recorder2rc
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.core.JsonFactory
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue

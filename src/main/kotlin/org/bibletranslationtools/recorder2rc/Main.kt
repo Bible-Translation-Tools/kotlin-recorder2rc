@@ -1,4 +1,4 @@
-package org.wycliffeassociates.recorder2rc
+package org.bibletranslationtools.recorder2rc
 
 import java.io.File
 

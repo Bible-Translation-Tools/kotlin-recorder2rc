@@ -1,5 +1,5 @@
 import org.wycliffeassociates.otter.common.audio.AudioFile
-import org.wycliffeassociates.recorder2rc.Recorder2RCConverter
+import org.bibletranslationtools.recorder2rc.Recorder2RCConverter
 import org.wycliffeassociates.resourcecontainer.ResourceContainer
 import org.wycliffeassociates.resourcecontainer.entity.DublinCore
 import org.wycliffeassociates.resourcecontainer.entity.Language

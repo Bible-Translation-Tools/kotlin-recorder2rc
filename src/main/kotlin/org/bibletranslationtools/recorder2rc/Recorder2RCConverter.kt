@@ -1,16 +1,15 @@
-package org.wycliffeassociates.recorder2rc
+package org.bibletranslationtools.recorder2rc
 
 import com.fasterxml.jackson.core.JsonFactory
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import org.wycliffeassociates.org.wycliffeassociates.recorder2rc.SourceBuilder
-import org.wycliffeassociates.recorder2rc.recorderentity.Book
-import org.wycliffeassociates.recorder2rc.recorderentity.Language
-import org.wycliffeassociates.recorder2rc.recorderentity.Manifest
-import org.wycliffeassociates.recorder2rc.recorderentity.unzipFile
-import org.wycliffeassociates.recorder2rc.recorderentity.zipDirectory
+import org.bibletranslationtools.recorder2rc.recorderentity.Book
+import org.bibletranslationtools.recorder2rc.recorderentity.Language
+import org.bibletranslationtools.recorder2rc.recorderentity.Manifest
+import org.bibletranslationtools.recorder2rc.recorderentity.unzipFile
+import org.bibletranslationtools.recorder2rc.recorderentity.zipDirectory
 import org.wycliffeassociates.resourcecontainer.ResourceContainer
 import org.wycliffeassociates.resourcecontainer.entity.Checking
 import org.wycliffeassociates.resourcecontainer.entity.DublinCore

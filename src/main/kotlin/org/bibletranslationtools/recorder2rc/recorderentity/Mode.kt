@@ -1,4 +1,4 @@
-package org.wycliffeassociates.recorder2rc.recorderentity
+package org.bibletranslationtools.recorder2rc.recorderentity
 
 data class Mode(
     val name: String,

@@ -1,4 +1,4 @@
-package org.wycliffeassociates.recorder2rc
+package org.bibletranslationtools.recorder2rc
 
 import org.wycliffeassociates.otter.common.audio.AudioFile
 import org.wycliffeassociates.otter.common.audio.wav.CueChunk

@@ -1,4 +1,4 @@
-package org.wycliffeassociates.recorder2rc.recorderentity
+package org.bibletranslationtools.recorder2rc.recorderentity
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
