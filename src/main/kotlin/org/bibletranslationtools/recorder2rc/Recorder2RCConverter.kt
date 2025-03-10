@@ -88,7 +88,20 @@ class Recorder2RCConverter {
             if (chapterDirInRC.list().isEmpty()) {
                 chapterDirInRC.delete()
             } else {
-                compileChapter(recorderManifest, chapterPathName, chapterDirInRC, takesToCompile, selectedTakesFile)
+                val chapterTake = compileChapter(
+                    recorderManifest,
+                    chapterPathName,
+                    chapterDirInRC,
+                    takesToCompile
+                )
+                selectedTakesFile.appendText("c$chapterPathName/${chapterTake.name}\n")
+
+                if (recorderManifest.mode.slug == "chunk") { // de-chunk to verses
+                    val verseFiles = splitAudioOnMarkers(chapterTake, chapterDirInRC)
+                    verseFiles.forEach { v ->
+                        selectedTakesFile.appendText("c$chapterPathName/${v.name}\n")
+                    }
+                }
             }
 
         }
@@ -106,15 +119,13 @@ class Recorder2RCConverter {
         recorderManifest: Manifest,
         chapterPathName: String,
         chapterDirInRC: File,
-        takesToCompile: MutableList<File>,
-        selectedTakesFile: File
-    ) {
+        takesToCompile: MutableList<File>
+    ): File {
         val chapterTakeName = buildOratureTakeName(recorderManifest, chapterPathName, null, 1)
         val chapterTake = chapterDirInRC.resolve(chapterTakeName)
         chapterTake.createNewFile()
         concatAudio(takesToCompile, chapterTake)
-        selectedTakesFile.appendText("c$chapterPathName/$chapterTakeName\n")
-
+        return chapterTake
     }
 
     private fun buildManifest(recorderManifest: Manifest, rcPath: File): RCManifest {
