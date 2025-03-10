@@ -15,6 +15,7 @@ import org.wycliffeassociates.resourcecontainer.entity.Checking
 import org.wycliffeassociates.resourcecontainer.entity.DublinCore
 import org.wycliffeassociates.resourcecontainer.entity.Project
 import org.wycliffeassociates.resourcecontainer.entity.Source
+import org.wycliffeassociates.resourcecontainer.errors.UnsupportedRCException
 import java.io.File
 import java.nio.file.Files
 import java.time.LocalDate
@@ -118,9 +119,10 @@ class Recorder2RCConverter {
 
     private fun buildManifest(recorderManifest: Manifest, rcPath: File): RCManifest {
         val sourceDir = rcPath.resolve(SOURCE_DIR).apply { mkdirs() }
-        val sourceFile =
-            SourceBuilder.createMatchingSourceForLanguage(recorderManifest.sourceLanguage!!.slug, sourceDir)!!
-        val sourceLanguage = recorderManifest.sourceLanguage.slug
+        val sourceLanguage = recorderManifest.sourceLanguage?.slug ?: "en" // default to English if empty
+        val sourceFile = SourceBuilder.createMatchingSourceForLanguage(sourceLanguage, sourceDir)
+            ?: throw UnsupportedRCException("Could not find matching source for '$sourceLanguage'.")
+
         val sourceVersion = ResourceContainer.load(sourceFile).use { it.manifest.dublinCore.version }
         val source = Source(identifier = "ulb", language = sourceLanguage, version = sourceVersion)
         val sourceList = listOfNotNull(source).toMutableList()
