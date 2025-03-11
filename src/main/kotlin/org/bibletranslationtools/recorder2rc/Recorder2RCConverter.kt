@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import com.fasterxml.jackson.module.kotlin.treeToValue
 import org.bibletranslationtools.recorder2rc.recorderentity.Book
 import org.bibletranslationtools.recorder2rc.recorderentity.Language
 import org.bibletranslationtools.recorder2rc.recorderentity.Manifest
@@ -17,6 +18,7 @@ import org.wycliffeassociates.resourcecontainer.entity.Project
 import org.wycliffeassociates.resourcecontainer.entity.Source
 import org.wycliffeassociates.resourcecontainer.errors.UnsupportedRCException
 import java.io.File
+import java.io.FileNotFoundException
 import java.nio.file.Files
 import java.time.LocalDate
 
@@ -31,6 +33,12 @@ class Recorder2RCConverter {
     private val SOURCE_DIR = "$ORATURE_INTERNAL_DIR/source"
     private val ORATURE_SELECTED_TAKES_FILE = "$ORATURE_INTERNAL_DIR/selected.txt"
     private val ORATURE_MANIFEST = "manifest.yaml"
+
+    private val versification: Versification = javaClass.classLoader.getResourceAsStream("eng.json")?.use { stream ->
+        val mapper = ObjectMapper(JsonFactory()).registerKotlinModule()
+        val jsonVers = mapper.readTree(stream).get("maxVerses")
+        return@use mapper.treeToValue<Versification>(jsonVers)
+    } ?: throw FileNotFoundException("Versification file not found.")
 
     fun convert(inputFile: File, outputDir: File): File {
         if (!outputDir.exists()) outputDir.mkdirs()
@@ -52,8 +60,7 @@ class Recorder2RCConverter {
         writeManifest(manifest, rcDir)
 
         val recorderSelectedTakes: List<String> = mapper.readValue(projectDir.resolve(RECORDER_SELECTED_FILE))
-        val selectedTakesFile = rcDir.resolve(ORATURE_SELECTED_TAKES_FILE)
-            .apply { createNewFile() } // resembles ongoing project
+        val oratureSelectedTakes = mutableListOf<String>()
 
         val chapterDigitFormat = if (recorderManifest.chapters.size <= 99) "%02d" else "%03d"
         /* handle recorded takes */
@@ -80,7 +87,7 @@ class Recorder2RCConverter {
                             )
                             val takeFileInRC = chapterDirInRC.resolve(rcTakeName)
                             takeFile.copyTo(takeFileInRC)
-                            selectedTakesFile.appendText("c$chapterPathName/$rcTakeName\n")
+                            oratureSelectedTakes.add("c$chapterPathName/$rcTakeName")
                             takesToCompile.add(takeFileInRC)
                         }
                 }
@@ -94,17 +101,31 @@ class Recorder2RCConverter {
                     chapterDirInRC,
                     takesToCompile
                 )
-                selectedTakesFile.appendText("c$chapterPathName/${chapterTake.name}\n")
 
                 if (recorderManifest.mode.slug == "chunk") { // de-chunk to verses
                     val verseFiles = splitAudioOnMarkers(chapterTake, chapterDirInRC)
                     verseFiles.forEach { v ->
-                        selectedTakesFile.appendText("c$chapterPathName/${v.name}\n")
+                        oratureSelectedTakes.add("c$chapterPathName/${v.name}")
                     }
+                }
+
+                val chapterCompleted = chapterHasAllVerses(
+                    recorderManifest,
+                    chapter.chapterNumber,
+                    chapterDirInRC
+                )
+                if (chapterCompleted) {
+                    oratureSelectedTakes.add("c$chapterPathName/${chapterTake.name}")
+                } else {
+                    chapterTake.delete()
                 }
             }
 
         }
+
+        val selectedTakesFile = rcDir.resolve(ORATURE_SELECTED_TAKES_FILE)
+            .apply { createNewFile() } // resembles ongoing project
+        selectedTakesFile.writeText(oratureSelectedTakes.joinToString("\n"))
 
         val zippedFile = outputDir.resolve("${rcDir.name}.zip").apply { delete() }
         zipDirectory(rcDir, zippedFile)
@@ -200,5 +221,17 @@ class Recorder2RCConverter {
         val resource = recorderManifest.version.slug
         val book = recorderManifest.book.slug
         return "${language}_${resource}_${book}_c${chapter}_${verse?.let { "v$verse" } ?: "meta"}_t$take.$extension"
+    }
+
+    private fun chapterHasAllVerses(manifest: Manifest, chapter: Int, chapterDir: File): Boolean {
+        val book = manifest.book.slug
+        val verseCount = versification[book.uppercase()]!![chapter - 1].toInt()
+        val fileNamesInChapterDir = chapterDir.listFiles().map { it.name }
+        for (i in 1 .. verseCount) {
+            if (fileNamesInChapterDir.none { it.contains("_v${i}_t") }) {
+                return false
+            }
+        }
+        return true
     }
 }
