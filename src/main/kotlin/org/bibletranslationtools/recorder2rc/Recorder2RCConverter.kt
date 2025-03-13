@@ -9,8 +9,6 @@ import com.fasterxml.jackson.module.kotlin.treeToValue
 import org.bibletranslationtools.recorder2rc.recorderentity.Book
 import org.bibletranslationtools.recorder2rc.recorderentity.Language
 import org.bibletranslationtools.recorder2rc.recorderentity.Manifest
-import org.bibletranslationtools.recorder2rc.recorderentity.unzipFile
-import org.bibletranslationtools.recorder2rc.recorderentity.zipDirectory
 import org.wycliffeassociates.resourcecontainer.ResourceContainer
 import org.wycliffeassociates.resourcecontainer.entity.Checking
 import org.wycliffeassociates.resourcecontainer.entity.DublinCore
@@ -76,7 +74,6 @@ class Recorder2RCConverter {
                 .sortedBy { it.start }
                 .forEach { chunk ->
                     chunk.takes
-                        .filter { it.name in recorderSelectedTakes }
                         .forEach { take ->
                             val takeFile = projectDir.resolve(chapterPathName).resolve(take.name)
                             val rcTakeName = buildOratureTakeName(
@@ -87,8 +84,11 @@ class Recorder2RCConverter {
                             )
                             val takeFileInRC = chapterDirInRC.resolve(rcTakeName)
                             takeFile.copyTo(takeFileInRC)
-                            oratureSelectedTakes.add("c$chapterPathName/$rcTakeName")
-                            takesToCompile.add(takeFileInRC)
+
+                            if (take.name in recorderSelectedTakes) {
+                                oratureSelectedTakes.add("c$chapterPathName/$rcTakeName")
+                                takesToCompile.add(takeFileInRC)
+                            }
                         }
                 }
 

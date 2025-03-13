@@ -1,4 +1,4 @@
-package org.bibletranslationtools.recorder2rc.recorderentity
+package org.bibletranslationtools.recorder2rc
 
 import java.io.File
 import java.nio.file.Files
